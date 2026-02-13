@@ -6,6 +6,9 @@ namespace Xbim.IDS.Validator.Console
 {
     public partial class CliOptions
     {
+        /// <summary>
+        /// Provides a means to associate the <see cref="ICommandAction"/> against a defined CommandLine <see cref="Command"/>
+        /// </summary>
         public abstract class BaseCommand : Command
         {
             private readonly IServiceProvider provider;
@@ -16,16 +19,17 @@ namespace Xbim.IDS.Validator.Console
             }
 
             /// <summary>
-            /// Sets the handler up to execute the provided <see cref="ICommand"/>
+            /// Sets the action / handler up to execute an <see cref="ICommandAction"/>
             /// </summary>
-            /// <typeparam name="T"></typeparam>
-            internal void SetCommandHandler<T>() where T : ICommand
+            /// <typeparam name="T">The defined Action type</typeparam>
+            internal void SetAction<T>() where T : ICommandAction
             {
-                this.SetHandler(async (ctx) =>
+
+                this.SetAction(async (parseResult, cancellationToken) =>
                 {
                     var command = provider.GetRequiredService<T>();
-                    var result = await command.ExecuteAsync(ctx);
-                    ctx.ExitCode = result;
+                    var result = await command.ExecuteActionAsync(parseResult, cancellationToken);
+                    return result;
                 });
             }
         }

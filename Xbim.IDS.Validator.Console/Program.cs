@@ -3,11 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Xbim.Common.Configuration;
 using Xbim.IDS.Validator.Console;
-using Xbim.IDS.Validator.Console.Commands;
+using Xbim.IDS.Validator.Console.Actions;
 using Xbim.IDS.Validator.Core;
 using Xbim.IDS.Validator.Core.Configuration;
 
@@ -22,14 +21,20 @@ partial class Program
         var host = CreateHostBuilder(args).Build();
 
         logger = host.Services.GetRequiredService<ILogger<Program>>();
-        var rootCommand = CliOptions.SetupCommands(host.Services);
+        RootCommand rootCommand = CliOptions.SetupCommands(host.Services);
+
 
         // Handle the supplied arguments
-        var result = await rootCommand.InvokeAsync(args);
+        var parseResult = rootCommand.Parse(args);
+
+        // TODO: We can check parse results, but EnableDefaultExceptionHandler implementation seems good enough....
+        var result = await parseResult.InvokeAsync(/* config,  CancelationToken */);
 
         //Console.ReadLine();
 
         return result;
+        
+        
     }
 
     [RequiresUnreferencedCode("Calls Microsoft.Extensions.DependencyInjection.OptionsBuilderConfigurationExtensions.Bind<TOptions>(IConfiguration)")]
@@ -47,11 +52,11 @@ partial class Program
             }).SetMinimumLevel(LogLevel.Debug))
             .AddIdsValidation(cfg => cfg.AddCOBie())
             .AddXbimToolkit(opt => opt.AddMemoryModel())
-            .AddTransient<VerifyIfcCommand>()
-            .AddTransient<IdsAuditCommand>()
-            .AddTransient<IdsMigratorCommand>()
-            .AddTransient<IdsDetokeniseFileCommand>()
-            .AddTransient<IdsDetokeniseFolderCommand>()
+            .AddTransient<VerifyIfcAction>()
+            .AddTransient<IdsAuditAction>()
+            .AddTransient<IdsMigratorAction>()
+            .AddTransient<IdsDetokeniseFileAction>()
+            .AddTransient<IdsDetokeniseFolderAction>()
 
             .AddOptions<IdsConfig>()
             .Bind(host.Configuration.GetSection(IdsConfig.SectionName));

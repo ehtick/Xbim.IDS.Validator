@@ -1,32 +1,31 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.CommandLine.Invocation;
+using System.CommandLine;
 using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Console.Internal;
-using Xbim.IO.Parser;
 
-namespace Xbim.IDS.Validator.Console.Commands
+namespace Xbim.IDS.Validator.Console.Actions
 {
     /// <summary>
     /// Detokenises IDS files replacing 'Handlebar' style tokens with a value supplied at runtime
     /// </summary>
-    internal class IdsDetokeniseFolderCommand : TokenCommandBase, ICommand
+    internal class IdsDetokeniseFolderAction : TokenActionBase, ICommandAction
     {
         private readonly IIdsDetokeniser detokeniser;
-        private readonly ILogger<IdsDetokeniseFolderCommand> logger;
+        private readonly ILogger<IdsDetokeniseFolderAction> logger;
 
-        public IdsDetokeniseFolderCommand(IIdsDetokeniser detokeniser, ILogger<IdsDetokeniseFolderCommand> logger, IOptions<IdsConfig> config) : base(config)
+        public IdsDetokeniseFolderAction(IIdsDetokeniser detokeniser, ILogger<IdsDetokeniseFolderAction> logger, IOptions<IdsConfig> config) : base(config)
         {
             this.detokeniser = detokeniser;
             this.logger = logger;
         }
 
-        public async Task<int> ExecuteAsync(InvocationContext context)
+        public async Task<int> ExecuteActionAsync(ParseResult parseResult, CancellationToken cancellationToken)
         {
-            var sourceFolder = context.ParseResult.GetValueForArgument(CliOptions.DetokeniseFolderCommand.IdsTemplateFolderArgument);
-            var outputFolder = context.ParseResult.GetValueForArgument(CliOptions.DetokeniseFolderCommand.IdsOutputFolderArgument);
-            var recursive = context.ParseResult.GetValueForOption(CliOptions.DetokeniseFolderCommand.SubFoldersOption);
-            var verbosity = context.ParseResult.GetValueForOption(CliOptions.VerbosityOption);
+            var sourceFolder = parseResult.GetValue(CliOptions.DetokeniseFolderCommand.IdsTemplateFolderArgument);
+            var outputFolder = parseResult.GetValue(CliOptions.DetokeniseFolderCommand.IdsOutputFolderArgument);
+            var recursive = parseResult.GetValue(CliOptions.DetokeniseFolderCommand.SubFoldersOption);
+            var verbosity = parseResult.GetValue(CliOptions.VerbosityOption);
 
             if(sourceFolder?.Exists != true)
             {

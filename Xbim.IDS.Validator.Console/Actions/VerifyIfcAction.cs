@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.CommandLine.Invocation;
 using System.Diagnostics;
 using Xbim.Common;
 using Xbim.IDS.Validator.Common;
@@ -12,44 +11,45 @@ using Microsoft.Extensions.Options;
 using static Xbim.IDS.Validator.Console.CliOptions;
 using Xbim.IDS.Validator.Console.Internal;
 using Xbim.IO.CobieExpress;
+using System.CommandLine;
 
-namespace Xbim.IDS.Validator.Console.Commands
+namespace Xbim.IDS.Validator.Console.Actions
 {
     /// <summary>
     /// Verifies IFC and COBie models against a set of IDS files.
     /// </summary>
-    internal class VerifyIfcCommand : ICommand
+    internal class VerifyIfcAction : ICommandAction
     {
         private readonly IIdsModelValidator idsValidator;
-        private readonly ILogger<VerifyIfcCommand> logger;
+        private readonly ILogger<VerifyIfcAction> logger;
         private readonly IdsConfig config;
         private ConsoleLogger console = new ConsoleLogger(Verbosity.Normal);
 
         /// <summary>
-        /// Constructs a new <see cref="VerifyIfcCommand"/>
+        /// Constructs a new <see cref="VerifyIfcAction"/>
         /// </summary>
         /// <param name="validator"></param>
         /// <param name="logger"></param>
         /// <param name="config"></param>
-        public VerifyIfcCommand(IIdsModelValidator validator, ILogger<VerifyIfcCommand> logger, IOptions<IdsConfig> config)
+        public VerifyIfcAction(IIdsModelValidator validator, ILogger<VerifyIfcAction> logger, IOptions<IdsConfig> config)
         {
             idsValidator = validator;
             this.logger = logger;
             this.config = config.Value;
         }
 
-        public async Task<int> ExecuteAsync(InvocationContext ctx)
+        public async Task<int> ExecuteActionAsync(ParseResult parseResult, CancellationToken cancellationToken)
         {
-            var idsFiles = ctx.ParseResult.GetValueForOption(VerifyCommand.IdsFilesOption);
-            var modelFiles = ctx.ParseResult.GetValueForArgument(VerifyCommand.ModelFilesArgument);
-            var verbosity = ctx.ParseResult.GetValueForOption(VerbosityOption);
-            var specNameFilter = ctx.ParseResult.GetValueForOption(VerifyCommand.IdsFilterOption);
+            var idsFiles = parseResult.GetValue(VerifyCommand.IdsFilesOption);
+            var modelFiles = parseResult.GetValue(VerifyCommand.ModelFilesArgument);
+            var verbosity = parseResult.GetValue(VerbosityOption);
+            var specNameFilter = parseResult.GetValue(VerifyCommand.IdsFilterOption);
 
-            return await Execute(idsFiles, modelFiles, verbosity, specNameFilter);
+            return await Execute(idsFiles, modelFiles, verbosity, specNameFilter, cancellationToken);
         }
 
 
-        private async Task<int> Execute(string[] idsFiles, string[] modelFiles, Verbosity verbosity, string specNameFilter)
+        private async Task<int> Execute(string[] idsFiles, string[] modelFiles, Verbosity verbosity, string specNameFilter, CancellationToken cancellationToken)
         {
             var failedSpecs = 0;
             console = new ConsoleLogger(verbosity);
@@ -115,7 +115,7 @@ namespace Xbim.IDS.Validator.Console.Commands
                             options.AllowDerivedAttributes = true;
                         }
 
-                        var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options);
+                        var results = await idsValidator.ValidateAgainstIdsAsync(model, ids, logger, OutputRequirement, options, cancellationToken);
 
                         sw.Stop();
                         failedSpecs += results.ExecutedRequirements.Count(r => r.Status == ValidationStatus.Fail);

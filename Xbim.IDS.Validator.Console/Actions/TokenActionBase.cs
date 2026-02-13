@@ -6,15 +6,15 @@ using System.Text;
 using System.Threading.Tasks;
 using Xbim.IDS.Validator.Console.Internal;
 
-namespace Xbim.IDS.Validator.Console.Commands
+namespace Xbim.IDS.Validator.Console.Actions
 {
-    public abstract class TokenCommandBase
+    public abstract class TokenActionBase
     {
         private readonly IdsConfig config;
 
         public IdsConfig Config => config;
 
-        protected TokenCommandBase(IOptions<IdsConfig> config)
+        protected TokenActionBase(IOptions<IdsConfig> config)
         {
             this.config = config.Value;
         }

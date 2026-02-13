@@ -1,32 +1,32 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.CommandLine.Invocation;
+using System.CommandLine;
 using Xbim.IDS.Validator.Common.Interfaces;
 using Xbim.IDS.Validator.Console.Internal;
 
-namespace Xbim.IDS.Validator.Console.Commands
+namespace Xbim.IDS.Validator.Console.Actions
 {
     /// <summary>
     /// Detokenises IDS files replacing 'Handlebar' style tokens with a value supplied at runtime
     /// </summary>
-    internal class IdsDetokeniseFileCommand : TokenCommandBase, ICommand
+    internal class IdsDetokeniseFileAction : TokenActionBase, ICommandAction
     {
         private readonly IIdsDetokeniser detokeniser;
-        private readonly ILogger<IdsDetokeniseFileCommand> logger;
+        private readonly ILogger<IdsDetokeniseFileAction> logger;
 
-        public IdsDetokeniseFileCommand(IIdsDetokeniser detokeniser, ILogger<IdsDetokeniseFileCommand> logger, IOptions<IdsConfig> config) : base(config)
+        public IdsDetokeniseFileAction(IIdsDetokeniser detokeniser, ILogger<IdsDetokeniseFileAction> logger, IOptions<IdsConfig> config) : base(config)
         {
             this.detokeniser = detokeniser;
             this.logger = logger;
         }
 
-        public async Task<int> ExecuteAsync(InvocationContext context)
+        public async Task<int> ExecuteActionAsync(ParseResult parseResult, CancellationToken cancellationToken)
         {
-            var template = context.ParseResult.GetValueForArgument(CliOptions.DetokeniseFileCommand.IdsTemplateFileArgument);
-            var outputFile = context.ParseResult.GetValueForArgument(CliOptions.DetokeniseFileCommand.IdsOutputFileArgument);
-            var verbosity = context.ParseResult.GetValueForOption(CliOptions.VerbosityOption);
+            var template = parseResult.GetValue(CliOptions.DetokeniseFileCommand.IdsTemplateFileArgument);
+            var outputFile = parseResult.GetValue(CliOptions.DetokeniseFileCommand.IdsOutputFileArgument);
+            var verbosity = parseResult.GetValue(CliOptions.VerbosityOption);
 
-            if(!template.Exists)
+            if(!template!.Exists)
             {
                 logger.LogWarning("IDS template file {file} does not exist", template.FullName);
                 return -1;

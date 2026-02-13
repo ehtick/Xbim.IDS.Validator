@@ -1,28 +1,28 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.CommandLine.Invocation;
+using System.CommandLine;
 using Xbim.IDS.Validator.Console.Internal;
 using Xbim.IDS.Validator.Core.Interfaces;
 
-namespace Xbim.IDS.Validator.Console.Commands
+namespace Xbim.IDS.Validator.Console.Actions
 {
     /// <summary>
     /// Audits IDS files against the IDS 1.0 standards using ids-lib
     /// </summary>
-    internal class IdsAuditCommand : ICommand
+    internal class IdsAuditAction : ICommandAction
     {
         private readonly IIdsValidator idsValidator;
-        private readonly ILogger<IdsAuditCommand> logger;
+        private readonly ILogger<IdsAuditAction> logger;
 
-        public IdsAuditCommand(IIdsValidator idsValidator, ILogger<IdsAuditCommand> logger)
+        public IdsAuditAction(IIdsValidator idsValidator, ILogger<IdsAuditAction> logger)
         {
             this.idsValidator = idsValidator;
             this.logger = logger;
         }
 
-        public async Task<int> ExecuteAsync(InvocationContext context)
+        public async Task<int> ExecuteActionAsync(ParseResult parseResult, CancellationToken cancellationToken)
         {
-            var ids = context.ParseResult.GetValueForArgument(CliOptions.IdsFilesArgument);
-            var verbosity = context.ParseResult.GetValueForOption(CliOptions.VerbosityOption);
+            var ids = parseResult.GetValue(CliOptions.IdsFilesArgument);
+            var verbosity = parseResult.GetValue(CliOptions.VerbosityOption);
 
             return await Execute(ids, verbosity);
         }

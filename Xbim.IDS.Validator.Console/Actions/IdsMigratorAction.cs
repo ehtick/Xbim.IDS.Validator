@@ -1,30 +1,30 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.CommandLine.Invocation;
+using System.CommandLine;
 using Xbim.IDS.Validator.Console.Internal;
 using Xbim.IDS.Validator.Core.Interfaces;
 
-namespace Xbim.IDS.Validator.Console.Commands
+namespace Xbim.IDS.Validator.Console.Actions
 {
 
     /// <summary>
     /// Upgrades an IDS file to the latest 1.0 schema
     /// </summary>
-    internal class IdsMigratorCommand : ICommand
+    internal class IdsMigratorAction : ICommandAction
     {
         private readonly IIdsSchemaMigrator migrator;
-        private readonly ILogger<IdsMigratorCommand> logger;
+        private readonly ILogger<IdsMigratorAction> logger;
 
-        public IdsMigratorCommand(IIdsSchemaMigrator migrator, ILogger<IdsMigratorCommand> logger)
+        public IdsMigratorAction(IIdsSchemaMigrator migrator, ILogger<IdsMigratorAction> logger)
         {
             this.migrator = migrator;
             this.logger = logger;
         }
 
 
-        public async Task<int> ExecuteAsync(InvocationContext context)
+        public async Task<int> ExecuteActionAsync(ParseResult parseResult, CancellationToken cancellationToken)
         {
-            var ids = context.ParseResult.GetValueForArgument(CliOptions.IdsFilesArgument);
-            var verbosity = context.ParseResult.GetValueForOption(CliOptions.VerbosityOption);
+            var ids = parseResult.GetValue(CliOptions.IdsFilesArgument);
+            var verbosity = parseResult.GetValue(CliOptions.VerbosityOption);
 
             return await Execute(ids, verbosity);
         }
