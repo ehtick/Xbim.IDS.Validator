@@ -95,7 +95,7 @@ namespace Xbim.IDS.Validator.Core
                     foreach (var spec in group.Specifications.Where(specFilter))
                     {
 
-                        var requirementResult = ValidateRequirement(spec, model, userLogger, token, verificationOptions);
+                        var requirementResult = VerifyModelAgainstSpecification(spec, model, userLogger, token, verificationOptions);
 
                         SetResults(spec, requirementResult);
                         
@@ -124,8 +124,8 @@ namespace Xbim.IDS.Validator.Core
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to complete validation");
-                userLogger.LogError("Failed to complete validation");
+                logger.LogError(ex, "Model validation failed unexpectedly.");
+                userLogger.LogError("Model validation failed unexpectedly: {reason}", ex.Message);
                 var badOutcome = new ValidationOutcome(new Xids());
                 badOutcome.MarkCompletelyFailed(ex.Message);
                 return badOutcome;
@@ -174,8 +174,8 @@ namespace Xbim.IDS.Validator.Core
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to complete validation");
-                userLogger.LogError("Failed to complete validation");
+                logger.LogError(ex, "Model validation failed unexpectedly.");
+                userLogger.LogError("Model validation failed unexpectedly: {reason}", ex.Message);
                 var badOutcome = new ValidationOutcome(new Xids());
                 badOutcome.MarkCompletelyFailed(ex.Message);
                 return await Task.FromResult(badOutcome);
@@ -216,7 +216,7 @@ namespace Xbim.IDS.Validator.Core
             return Xids.LoadBuildingSmartIDS(idsFile, logger);
         }
 
-        private ValidationRequirement ValidateRequirement(Specification spec, IModel model, ILogger userLogger, CancellationToken token, VerificationOptions options)
+        private ValidationRequirement VerifyModelAgainstSpecification(Specification spec, IModel model, ILogger userLogger, CancellationToken token, VerificationOptions options)
         {
             if (spec is null)
             {
@@ -320,8 +320,9 @@ namespace Xbim.IDS.Validator.Core
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to run specification: {reason}", ex.Message);
-                userLogger.LogError("Failed to run specification: {reason}", ex.Message);
+                var specName = spec.Name ?? spec.Description ?? spec.Guid ?? "";
+                logger.LogWarning(ex, "Failed to run specification '{spec}': {reason}", specName, ex.Message);
+                userLogger.LogError("Failed to run specification '{spec}': {reason}", specName, ex.Message);
                 requirementResult.Status = ValidationStatus.Error;
                 var errorResult = new IdsValidationResult(null, null);
                 errorResult.FailWithError(ValidationMessage.Error(ex.Message));

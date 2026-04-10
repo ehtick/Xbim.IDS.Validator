@@ -13,7 +13,7 @@
     <Product>IDS Validator xbim Toolkit</Product>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/xBimTeam/Xbim.IDS.Validator</RepositoryUrl>
-    <LangVersion>10</LangVersion>
+    <LangVersion>12</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetXbimV6)' == 'true'">
